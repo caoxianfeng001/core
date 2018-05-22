@@ -25,6 +25,7 @@
 #include <sfx2/viewfrm.hxx>
 #include <sfx2/classificationhelper.hxx>
 #include <sfx2/notebookbar/SfxNotebookBar.hxx>
+#include <svx/svdview.hxx>
 #include <com/sun/star/document/MacroExecMode.hpp>
 #include <com/sun/star/frame/Desktop.hpp>
 #include <com/sun/star/frame/DispatchRecorder.hpp>
@@ -92,6 +93,7 @@
 
 #include <unotools/configmgr.hxx>
 #include <comphelper/sequenceashashmap.hxx>
+#include "CommandPopup.hxx"
 
 using namespace ::com::sun::star;
 using namespace ::com::sun::star::uno;
@@ -2916,8 +2918,26 @@ void SfxViewFrame::MiscExec_Impl( SfxRequest& rReq )
             rReq.Done();
             break;
         }
+        case SID_COMMAND_POPUP:
+        {
+            static VclPtr<CommandPopup> spCommandPopup;
+            static VclPtr<CommandListBox> spCommandListBox;
 
-        // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            if (spCommandListBox)
+                spCommandListBox.disposeAndClear();
+
+            if (spCommandPopup)
+                spCommandPopup.disposeAndClear();
+
+            css::uno::Reference<css::frame::XFrame> xFrame(GetFrame().GetFrameInterface(), css::uno::UNO_QUERY);
+            spCommandPopup.reset(VclPtr<CommandPopup>::Create(&GetWindow()));
+
+            spCommandListBox.reset(VclPtr<CommandListBox>::Create(spCommandPopup.get(), *spCommandPopup.get(), xFrame));
+            spCommandListBox->initialize();
+
+            rReq.Done();
+            break;
+        }
         case SID_WIN_FULLSCREEN:
         {
             const SfxBoolItem* pItem = rReq.GetArg<SfxBoolItem>(rReq.GetSlot());
