@@ -28,7 +28,7 @@
 
 namespace drawinglayer::texture
 {
-        class GeoTexSvx
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvx
         {
         public:
             GeoTexSvx();
@@ -51,7 +51,7 @@ namespace drawinglayer::texture
             basegfx::BColor         maBColor;
         };
 
-        class GeoTexSvxGradient : public GeoTexSvx
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxGradient : public GeoTexSvx
         {
         protected:
             basegfx::ODFGradientInfo            maGradientInfo;
@@ -77,7 +77,7 @@ namespace drawinglayer::texture
                 basegfx::BColor& rOuterColor) = 0;
         };
 
-        class GeoTexSvxGradientLinear final : public GeoTexSvxGradient
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxGradientLinear final : public GeoTexSvxGradient
         {
             double                  mfUnitMinX;
             double                  mfUnitWidth;
@@ -100,7 +100,7 @@ namespace drawinglayer::texture
             virtual void modifyBColor(const basegfx::B2DPoint& rUV, basegfx::BColor& rBColor, double& rfOpacity) const override;
         };
 
-        class GeoTexSvxGradientAxial final : public GeoTexSvxGradient
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxGradientAxial final : public GeoTexSvxGradient
         {
             double                  mfUnitMinX;
             double                  mfUnitWidth;
@@ -122,7 +122,7 @@ namespace drawinglayer::texture
             virtual void modifyBColor(const basegfx::B2DPoint& rUV, basegfx::BColor& rBColor, double& rfOpacity) const override;
         };
 
-        class GeoTexSvxGradientRadial final : public GeoTexSvxGradient
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxGradientRadial final : public GeoTexSvxGradient
         {
         public:
             GeoTexSvxGradientRadial(
@@ -141,7 +141,7 @@ namespace drawinglayer::texture
             virtual void modifyBColor(const basegfx::B2DPoint& rUV, basegfx::BColor& rBColor, double& rfOpacity) const override;
         };
 
-        class GeoTexSvxGradientElliptical final : public GeoTexSvxGradient
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxGradientElliptical final : public GeoTexSvxGradient
         {
         public:
             GeoTexSvxGradientElliptical(
@@ -161,7 +161,7 @@ namespace drawinglayer::texture
             virtual void modifyBColor(const basegfx::B2DPoint& rUV, basegfx::BColor& rBColor, double& rfOpacity) const override;
         };
 
-        class GeoTexSvxGradientSquare final : public GeoTexSvxGradient
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxGradientSquare final : public GeoTexSvxGradient
         {
         public:
             GeoTexSvxGradientSquare(
@@ -181,7 +181,7 @@ namespace drawinglayer::texture
             virtual void modifyBColor(const basegfx::B2DPoint& rUV, basegfx::BColor& rBColor, double& rfOpacity) const override;
         };
 
-        class GeoTexSvxGradientRect final : public GeoTexSvxGradient
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxGradientRect final : public GeoTexSvxGradient
         {
         public:
             GeoTexSvxGradientRect(
@@ -201,7 +201,7 @@ namespace drawinglayer::texture
             virtual void modifyBColor(const basegfx::B2DPoint& rUV, basegfx::BColor& rBColor, double& rfOpacity) const override;
         };
 
-        class GeoTexSvxHatch final : public GeoTexSvx
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxHatch final : public GeoTexSvx
         {
             basegfx::B2DRange                   maOutputRange;
             basegfx::B2DHomMatrix               maTextureTransform;
@@ -237,7 +237,7 @@ namespace drawinglayer::texture
         // given percentage value (offsetX has to be 0.0 <= offsetX <= 1.0).
         // Accordingly to offsetY. If both are given, offsetX is preferred
         // and offsetY is ignored.
-        class GeoTexSvxTiled final : public GeoTexSvx
+        class DRAWINGLAYER_DLLPUBLIC GeoTexSvxTiled final : public GeoTexSvx
         {
             basegfx::B2DRange               maRange;
             double                          mfOffsetX;
