@@ -58,7 +58,8 @@ enum class BmpScaleFlag
     Lanczos,
     BiCubic,
     BiLinear,
-    Super // bilinear interpolation when supersampling and averaging when subsampling under certain scale
+    Super, // bilinear interpolation when supersampling and averaging when subsampling under certain scale
+    Combo
 };
 
 #define BMP_COL_TRANS               Color( 252, 3, 251 )
