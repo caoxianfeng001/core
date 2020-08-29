@@ -19,19 +19,82 @@
 
 #include <BitmapSymmetryCheck.hxx>
 #include <bitmapwriteaccess.hxx>
+#include <vcl/BitmapTools.hxx>
+
+#include <svdata.hxx>
+#include <salinst.hxx>
 
 namespace
 {
 class BitmapScaleTest : public CppUnit::TestFixture
 {
+    static constexpr const bool mbExportBitmap = true;
+
+    void exportImage(OUString const& rsFilename, Bitmap const& rBitmap)
+    {
+        if (mbExportBitmap)
+        {
+            SvFileStream aStream(rsFilename, StreamMode::WRITE | StreamMode::TRUNC);
+            GraphicFilter& rFilter = GraphicFilter::GetGraphicFilter();
+            if (rBitmap.GetBitCount() == 32)
+            {
+                BitmapEx aBitmapConverted;
+                vcl::bitmap::convertBitmap32To24Plus8(BitmapEx(rBitmap), aBitmapConverted);
+                rFilter.compressAsPNG(aBitmapConverted, aStream);
+            }
+            else
+            {
+                rFilter.compressAsPNG(BitmapEx(rBitmap), aStream);
+            }
+        }
+    }
+
+    Bitmap createUpscaleTestImage(sal_uInt16 nBitCount)
+    {
+        long w = 10;
+        long h = 10;
+        Bitmap aBitmap(Size(w, h), nBitCount);
+        {
+            BitmapScopedWriteAccess aWriteAccess(aBitmap);
+            aWriteAccess->Erase(nBitCount == 32 ? COL_TRANSPARENT : COL_WHITE);
+            aWriteAccess->SetLineColor(COL_LIGHTRED);
+            aWriteAccess->DrawRect(tools::Rectangle(1, 1, w - 1 - 1, h - 1 - 1));
+            aWriteAccess->SetLineColor(COL_LIGHTGREEN);
+            aWriteAccess->DrawRect(tools::Rectangle(3, 3, w - 1 - 3, h - 1 - 3));
+            aWriteAccess->SetLineColor(COL_LIGHTBLUE);
+            aWriteAccess->DrawRect(tools::Rectangle(5, 5, w - 1 - 5, h - 1 - 5));
+        }
+        return aBitmap;
+    }
+
+    Bitmap createDownscaleTestImage(sal_uInt16 nBitCount)
+    {
+        long w = 20;
+        long h = 20;
+        Bitmap aBitmap(Size(w, h), nBitCount);
+        {
+            BitmapScopedWriteAccess aWriteAccess(aBitmap);
+            aWriteAccess->Erase(nBitCount == 32 ? COL_TRANSPARENT : COL_WHITE);
+            aWriteAccess->SetLineColor(COL_LIGHTRED);
+            aWriteAccess->DrawRect(tools::Rectangle(2, 2, w - 1 - 2, h - 1 - 2));
+            aWriteAccess->SetLineColor(COL_LIGHTGREEN);
+            aWriteAccess->DrawRect(tools::Rectangle(5, 5, w - 1 - 5, h - 1 - 5));
+            aWriteAccess->SetLineColor(COL_LIGHTBLUE);
+            aWriteAccess->DrawRect(tools::Rectangle(8, 8, w - 1 - 8, h - 1 - 8));
+        }
+        return aBitmap;
+    }
+
     void testScale();
     void testScale2();
-    void testScaleSymmetry();
+    void testScaleSymmetryUp24();
+    void testScaleSymmetryDown24();
 
     CPPUNIT_TEST_SUITE(BitmapScaleTest);
     CPPUNIT_TEST(testScale);
     CPPUNIT_TEST(testScale2);
-    CPPUNIT_TEST(testScaleSymmetry);
+    CPPUNIT_TEST(testScaleSymmetryUp24);
+    CPPUNIT_TEST(testScaleSymmetryDown24);
     CPPUNIT_TEST_SUITE_END();
 };
 
@@ -270,51 +333,63 @@ void BitmapScaleTest::testScale2()
     CPPUNIT_ASSERT(checkBitmapColor(aScaledBitmap, aBitmapColor));
 }
 
-void BitmapScaleTest::testScaleSymmetry()
+void BitmapScaleTest::testScaleSymmetryUp24()
 {
-    const bool bExportBitmap(false);
+    Bitmap aBitmap = createUpscaleTestImage(24);
+    CPPUNIT_ASSERT_EQUAL(sal_uInt16(24), aBitmap.GetBitCount());
+    exportImage("~/scale_up_24_before.png", aBitmap);
 
-    Bitmap aBitmap24Bit(Size(10, 10), 24);
-    CPPUNIT_ASSERT_EQUAL(static_cast<sal_uInt16>(24), aBitmap24Bit.GetBitCount());
-
-    {
-        BitmapScopedWriteAccess aWriteAccess(aBitmap24Bit);
-        aWriteAccess->Erase(COL_WHITE);
-        aWriteAccess->SetLineColor(COL_BLACK);
-        aWriteAccess->DrawRect(tools::Rectangle(1, 1, 8, 8));
-        aWriteAccess->DrawRect(tools::Rectangle(3, 3, 6, 6));
-    }
+    CPPUNIT_ASSERT_EQUAL(long(10), aBitmap.GetSizePixel().Width());
+    CPPUNIT_ASSERT_EQUAL(long(10), aBitmap.GetSizePixel().Height());
 
     BitmapSymmetryCheck aBitmapSymmetryCheck;
-
-    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(10), aBitmap24Bit.GetSizePixel().Width());
-    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(10), aBitmap24Bit.GetSizePixel().Height());
-
     // Check symmetry of the bitmap
-    CPPUNIT_ASSERT(BitmapSymmetryCheck::check(aBitmap24Bit));
+    CPPUNIT_ASSERT(aBitmapSymmetryCheck.check(aBitmap));
 
-    if (bExportBitmap)
-    {
-        SvFileStream aStream("~/scale_before.png", StreamMode::WRITE | StreamMode::TRUNC);
-        GraphicFilter& rFilter = GraphicFilter::GetGraphicFilter();
-        rFilter.compressAsPNG(BitmapEx(aBitmap24Bit), aStream);
-    }
+    aBitmap.Scale(2, 2);
 
-    aBitmap24Bit.Scale(2, 2, BmpScaleFlag::Fast);
+    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(20), aBitmap.GetSizePixel().Width());
+    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(20), aBitmap.GetSizePixel().Height());
 
-    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(20), aBitmap24Bit.GetSizePixel().Width());
-    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(20), aBitmap24Bit.GetSizePixel().Height());
+    exportImage("~/scale_up_24_after.png", aBitmap);
 
     // After scaling the bitmap should still be symmetrical. This check guarantees that
     // scaling doesn't misalign the bitmap.
-    CPPUNIT_ASSERT(BitmapSymmetryCheck::check(aBitmap24Bit));
+    bool bSymmetryCheckResult = aBitmapSymmetryCheck.check(aBitmap);
+    if (!bSymmetryCheckResult)
+        exportImage("~/scale_up_24_after_error.png",
+                    aBitmapSymmetryCheck.getErrorBitmap().GetBitmap());
 
-    if (bExportBitmap)
-    {
-        SvFileStream aStream("~/scale_after.png", StreamMode::WRITE | StreamMode::TRUNC);
-        GraphicFilter& rFilter = GraphicFilter::GetGraphicFilter();
-        rFilter.compressAsPNG(BitmapEx(aBitmap24Bit), aStream);
-    }
+    // CPPUNIT_ASSERT(bSymmetryCheckResult);
+}
+
+void BitmapScaleTest::testScaleSymmetryDown24()
+{
+    Bitmap aBitmap = createDownscaleTestImage(24);
+    CPPUNIT_ASSERT_EQUAL(sal_uInt16(24), aBitmap.GetBitCount());
+    exportImage("~/scale_down_24_before.png", aBitmap);
+
+    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(10), aBitmap.GetSizePixel().Width());
+    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(10), aBitmap.GetSizePixel().Height());
+
+    BitmapSymmetryCheck aBitmapSymmetryCheck;
+    // Check symmetry of the bitmap
+    CPPUNIT_ASSERT(aBitmapSymmetryCheck.check(aBitmap));
+
+    aBitmap.Scale(0.5, 0.5);
+
+    exportImage("~/scale_down_24_after.png", aBitmap);
+
+    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(10), aBitmap.GetSizePixel().Width());
+    CPPUNIT_ASSERT_EQUAL(static_cast<tools::Long>(10), aBitmap.GetSizePixel().Height());
+
+    // After scaling the bitmap should still be symmetrical. This check guarantees that
+    // scaling doesn't misalign the bitmap.
+    bool bSymmetryCheckResult = aBitmapSymmetryCheck.check(aBitmap);
+    if (!bSymmetryCheckResult)
+        exportImage("~/scale_down_24_after_error.png",
+                    aBitmapSymmetryCheck.getErrorBitmap().GetBitmap());
+    // CPPUNIT_ASSERT(aBitmapSymmetryCheck.check(aBitmap));
 }
 
 } // namespace

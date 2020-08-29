@@ -12,18 +12,24 @@
 #define INCLUDED_VCL_INC_BITMAPSYMMETRYCHECK_HXX
 
 #include <vcl/bitmap.hxx>
+#include <vcl/bitmapex.hxx>
 #include <vcl/bitmapaccess.hxx>
+#include <bitmapwriteaccess.hxx>
 
 class VCL_DLLPUBLIC BitmapSymmetryCheck final
 {
-public:
-    BitmapSymmetryCheck();
-    ~BitmapSymmetryCheck();
+private:
+    std::vector<std::pair<Point, Point>> maNonSymmetricPoints;
+    Size maSize;
 
-    static bool check(Bitmap& rBitmap);
+public:
+    BitmapSymmetryCheck() = default;
+    bool check(Bitmap& rBitmap);
+    BitmapEx getErrorBitmap();
 
 private:
-    static bool checkImpl(BitmapReadAccess const * pReadAccess);
+    bool checkImpl(BitmapReadAccess const * pReadAccess);
+    void addNewError(Point const & rPoint1, Point const & rPoint2);
 };
 
 #endif // INCLUDED_VCL_INC_BITMAPSYMMETRYCHECK_HXX
