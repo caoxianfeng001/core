@@ -321,7 +321,7 @@ void SAL_CALL CSysShExec::execute( const OUString& aCommand, const OUString& aPa
                 throw css::lang::IllegalArgumentException(
                     ("XSystemShellExecute.execute, getSystemPathFromFileURL <" + aCommand
                      + "> failed with " + OUString::number(e1)),
-                    {}, 0);
+                    static_cast< XSystemShellExecute* >( this ), 0);
             }
             for (int i = 0;; ++i) {
                 SHFILEINFOW info;
@@ -330,14 +330,16 @@ void SAL_CALL CSysShExec::execute( const OUString& aCommand, const OUString& aPa
                     != 0)
                 {
                     throw css::lang::IllegalArgumentException(
-                        "XSystemShellExecute.execute, cannot process <" + aCommand + ">", {}, 0);
+                        "XSystemShellExecute.execute, cannot process <" + aCommand + ">",
+                        static_cast< XSystemShellExecute* >( this ), 0);
                 }
                 if (SHGetFileInfoW(
                         pathname.getStr(), 0, &info, sizeof info, SHGFI_ATTRIBUTES)
                     == 0)
                 {
                     throw css::lang::IllegalArgumentException(
-                        "XSystemShellExecute.execute, SHGetFileInfoW(" + pathname + ") failed", {},
+                        "XSystemShellExecute.execute, SHGetFileInfoW(" + pathname + ") failed",
+                        static_cast< XSystemShellExecute* >( this ),
                         0);
                 }
                 if ((info.dwAttributes & SFGAO_LINK) == 0) {
@@ -351,7 +353,7 @@ void SAL_CALL CSysShExec::execute( const OUString& aCommand, const OUString& aPa
                     throw css::lang::IllegalArgumentException(
                         ("XSystemShellExecute.execute, CoCreateInstance failed with "
                          + OUString::number(e2)),
-                        {}, 0);
+                        static_cast< XSystemShellExecute* >( this ), 0);
                 }
                 sal::systools::COMReference<IPersistFile> file;
                 try {
@@ -360,21 +362,21 @@ void SAL_CALL CSysShExec::execute( const OUString& aCommand, const OUString& aPa
                     throw css::lang::IllegalArgumentException(
                         ("XSystemShellExecute.execute, QueryInterface failed with: "
                          + o3tl::runtimeToOUString(e3.what())),
-                        {}, 0);
+                        static_cast< XSystemShellExecute* >( this ), 0);
                 }
                 e2 = file->Load(pathname.getStr(), STGM_READ);
                 if (FAILED(e2)) {
                     throw css::lang::IllegalArgumentException(
                         ("XSystemShellExecute.execute, IPersistFile.Load failed with "
                          + OUString::number(e2)),
-                        {}, 0);
+                        static_cast< XSystemShellExecute* >( this ), 0);
                 }
                 e2 = link->Resolve(nullptr, SLR_UPDATE | SLR_NO_UI);
                 if (FAILED(e2)) {
                     throw css::lang::IllegalArgumentException(
                         ("XSystemShellExecute.execute, IShellLink.Resolve failed with "
                          + OUString::number(e2)),
-                        {}, 0);
+                        static_cast< XSystemShellExecute* >( this ), 0);
                 }
                 wchar_t path[MAX_PATH];
                 WIN32_FIND_DATAW wfd;
@@ -383,14 +385,14 @@ void SAL_CALL CSysShExec::execute( const OUString& aCommand, const OUString& aPa
                     throw css::lang::IllegalArgumentException(
                         ("XSystemShellExecute.execute, IShellLink.GetPath failed with "
                          + OUString::number(e2)),
-                        {}, 0);
+                        static_cast< XSystemShellExecute* >( this ), 0);
                 }
                 pathname = path;
                 // Fail at some arbitrary nesting depth, to avoid an infinite loop:
                 if (i == 30) {
                     throw css::lang::IllegalArgumentException(
                         "XSystemShellExecute.execute, link depth exceeded for <" + aCommand + ">",
-                        {}, 0);
+                        static_cast< XSystemShellExecute* >( this ), 0);
                 }
             }
             auto const n = pathname.lastIndexOf('.');
@@ -406,7 +408,8 @@ void SAL_CALL CSysShExec::execute( const OUString& aCommand, const OUString& aPa
                           ext, ".COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.PY")))
                 {
                     throw css::lang::IllegalArgumentException(
-                        "XSystemShellExecute.execute, cannot process <" + aCommand + ">", {}, 0);
+                        "XSystemShellExecute.execute, cannot process <" + aCommand + ">",
+                        static_cast< XSystemShellExecute* >( this ), 0);
                 }
             }
         }

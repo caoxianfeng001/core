@@ -283,7 +283,9 @@ static rtl_uString ** osl_createCommandArgs_Impl (int & argc, char **)
             /* Ensure absolute path */
             ::osl::LongPathBuffer< sal_Unicode > aBuffer( MAX_LONG_PATH );
             DWORD dwResult
-                = GetModuleFileNameW(nullptr, o3tl::toW(aBuffer), aBuffer.getBufSizeInSymbols());
+                = GetModuleFileNameW(nullptr,
+                                     reinterpret_cast<wchar_t *>(static_cast<sal_Unicode*>(aBuffer)),
+                                     aBuffer.getBufSizeInSymbols());
             if ((0 < dwResult) && (dwResult < aBuffer.getBufSizeInSymbols()))
             {
                 /* Replace argv[0] with it's absolute path */
